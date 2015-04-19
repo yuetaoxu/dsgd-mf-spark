@@ -6,19 +6,30 @@ import time
 import sys
 import math
 
+# default parameters
 FACTORS = 100
 WORKERS = 8
 ITERATIONS = 50
 LAMBDA = 1
-INITIAL_LEARNING_RATE = 0.05
 BETA = 0.3
 NUM_PERM_TRY = 10000
-PROFILE = "local-full" # in ["ec2", "local-full", "local-sample"]
+
+# local-sample: one file, each line in file is formatted to i,j,value
+# local-full: a folder, first line of each file is j
+#             then each line contains i and value
+# ec2: same input format as local-full, but uses yarn-client
+PROFILE = "local-sample" # in ["ec2", "local-full", "local-sample"]
+
+# TAU0 will be set automatically according to INITIAL_LEARNING_RATE if not specified
+# if TAU0 is specified, INITIAL_LEARNING_RATE is useless
 TAU0 = None
+INITIAL_LEARNING_RATE = 0.05
+
 INPUT_PATH = None
 W_PATH = None
 H_PATH = None
 
+# load parameter from arguments
 try:
     FACTORS = int(sys.argv[1])
     WORKERS = int(sys.argv[2])
@@ -33,6 +44,7 @@ try:
 except:
     pass
 
+# use estimated loss or full loss
 USE_FULL_LOSS = False
 
 # set TAU0 so that TAU0 ^ -BETA = INITIAL_LEARNING_RATE
@@ -53,7 +65,7 @@ if TAU0 is None:
 else:
     print >> sys.stderr, "TAU0 forced to:", TAU0
 
-# hyper parameters
+# set according to profile
 if PROFILE == "ec2":
     DATA_PATH = "/full/training_set/"
     DATA_FORMAT_IS_TUPLE = False
@@ -159,8 +171,7 @@ print >> sys.stderr, "Cols per block:", colsPerBlock
 
 tic.toc()
 
-# generate strata
-
+# generate blocks
 print >> sys.stderr, "Generating blocks..."
 tic = Clock()
 
